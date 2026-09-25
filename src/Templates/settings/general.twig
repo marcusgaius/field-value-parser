@@ -1,0 +1,25 @@
+{% extends 'field-value-parser/_layouts/settings.twig' %}
+{% import '_includes/forms.twig' as forms %}
+{# @var settings \MarcusGaius\FieldValueParser\Models\UserSettings #}
+
+{% set settingsScreen = 'general' %}
+{% set title = 'General' | t('field-value-parser') %}
+{% set fullPageForm = true %}
+
+{% block content %}
+	{{ actionInput('field-value-parser/settings/save') }}
+	{{ redirectInput('field-value-parser/settings') }}
+	{{ hiddenInput('scenario', 'general') }}
+
+	{% namespace 'UserSettings' %}
+		{{ forms.textField({
+			label: settings.getAttributeLabel('pluginName'),
+			instructions: 'The name of the plugin in the control panel navigation and permissions.' | t('field-value-parser'),
+			name: 'pluginName',
+			value: settings.pluginName,
+			placeholder: 'Field Value Parser' | t('field-value-parser'),
+			errors: settings.getErrors('pluginName'),
+			first: true,
+		}) }}
+	{% endnamespace %}
+{% endblock %}

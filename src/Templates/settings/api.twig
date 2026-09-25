@@ -1,0 +1,117 @@
+{% extends 'field-value-parser/_layouts/settings.twig' %}
+{% import '_includes/forms.twig' as forms %}
+{# @var settings \MarcusGaius\FieldValueParser\Models\Settings #}
+
+{% set settingsScreen = 'api' %}
+{% set title = 'API' | t('field-value-parser') %}
+{% set readOnly = not craft.app.config.general.allowAdminChanges %}
+{% set fullPageForm = not readOnly %}
+{% set variable = craft.fieldValueParser %}
+
+{% block content %}
+	{% if readOnly %}
+		<p class="warning">{{ 'Administrative changes are disallowed in this environment.' | t('app') }}</p>
+	{% else %}
+		{{ actionInput('field-value-parser/settings/save-api') }}
+		{{ redirectInput('field-value-parser/settings/api') }}
+	{% endif %}
+
+	<p class="fvp-muted">
+		{{ 'Public JSON endpoints listing live elements read with profiles. `{uri}/{endpoint}` lists them a page at a time, with `page`, `perPage` and `search` query params, and `{uri}/{endpoint}/{id-or-slug}` returns a single one.' | t('field-value-parser', {uri: settings.apiUri}) | md(inlineOnly=true) }}
+	</p>
+
+	{% namespace 'settings' %}
+		{{ forms.lightswitchField({
+			label: settings.getAttributeLabel('apiEnabled'),
+			instructions: 'Whether the API’s endpoints are registered. Turning it off frees up its URI.' | t('field-value-parser'),
+			name: 'apiEnabled',
+			on: settings.apiEnabled,
+			toggle: 'fvp-api-settings',
+			warning: variable.getConfigWarning('apiEnabled') | md(inlineOnly=true),
+			disabled: readOnly or settings.isOverriddenByConfig('apiEnabled'),
+		}) }}
+
+		<div id="fvp-api-settings" {% if not settings.apiEnabled %}class="hidden"{% endif %}>
+			{{ forms.textField({
+				label: settings.getAttributeLabel('apiUri'),
+				instructions: 'The site URI the endpoints are found under.' | t('field-value-parser'),
+				name: 'apiUri',
+				value: settings.apiUri,
+				required: true,
+				code: true,
+				warning: variable.getConfigWarning('apiUri') | md(inlineOnly=true),
+				disabled: readOnly or settings.isOverriddenByConfig('apiUri'),
+				errors: settings.getErrors('apiUri'),
+			}) }}
+
+			{% set configEndpoints = variable.getConfigEndpointRows() %}
+			{% if configEndpoints.error %}
+				<p class="error">{{ configEndpoints.error }}</p>
+			{% elseif configEndpoints.rows | length %}
+				<hr>
+				<h2>{{ 'Endpoints in `config/field-value-parser.php`' | t('field-value-parser') | md(inlineOnly=true) }}</h2>
+				<div class="tableview">
+					<table class="data fullwidth">
+						<thead>
+							<tr>
+								<th scope="col">{{ 'Handle' | t('app') }}</th>
+								<th scope="col">{{ 'URL' | t('app') }}</th>
+								<th scope="col">{{ 'Elements' | t('field-value-parser') }}</th>
+								<th scope="col">{{ 'Profile' | t('field-value-parser') }}</th>
+								<th scope="col">{{ 'Enabled' | t('app') }}</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for endpoint in configEndpoints.rows %}
+								<tr>
+									<td>{% include '_includes/forms/copytextbtn.twig' with {value: endpoint.handle} only %}</td>
+									<td>{% include '_includes/forms/copytextbtn.twig' with {value: endpoint.url} only %}</td>
+									<td>{{ endpoint.elements }}</td>
+									<td><code>{{ endpoint.profile }}</code></td>
+									<td>
+										<span class="fvp-badge">
+											<span class="fvp-icon" aria-hidden="true">{{ iconSvg(endpoint.enabled ? 'circle-check' : 'circle-xmark') }}</span>
+											{{ endpoint.enabled ? 'Yes' | t('app') : 'No' | t('app') }}
+										</span>
+									</td>
+								</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			{% endif %}
+
+			<hr>
+			{{ forms.editableTableField({
+				label: settings.getAttributeLabel('apiEndpoints'),
+				instructions: 'Endpoints in `config/field-value-parser.php` with the same handle replace these. Users can only be listed by endpoints in the config file, so their data isn’t made public by accident.' | t('field-value-parser') | md(inlineOnly=true),
+				id: 'apiEndpoints',
+				name: 'apiEndpoints',
+				cols: {
+					handle: {type: 'singleline', heading: 'Handle' | t('app'), class: 'code'},
+					source: {type: 'select', heading: 'Elements' | t('field-value-parser'), options: variable.getApiSourceOptions()},
+					profile: {type: 'select', heading: 'Profile' | t('field-value-parser'), options: variable.getProfileOptions()},
+					perPage: {type: 'singleline', heading: 'Per Page' | t('field-value-parser'), class: 'code', width: 80},
+					maxPerPage: {type: 'singleline', heading: 'Max Per Page' | t('field-value-parser'), class: 'code', width: 80},
+					allowSearch: {type: 'lightswitch', heading: 'Search' | t('field-value-parser')},
+					cacheMaxAge: {type: 'singleline', heading: 'Cache Max Age' | t('field-value-parser'), class: 'code', width: 100},
+					enabled: {type: 'lightswitch', heading: 'Enabled' | t('app')},
+				},
+				rows: variable.getApiEndpointTableRows(),
+				defaultValues: {
+					perPage: 20,
+					maxPerPage: 100,
+					allowSearch: true,
+					cacheMaxAge: 0,
+					enabled: true,
+				},
+				allowAdd: true,
+				allowDelete: true,
+				allowReorder: true,
+				static: readOnly or settings.isOverriddenByConfig('apiEndpoints'),
+				warning: variable.getConfigWarning('apiEndpoints') | md(inlineOnly=true),
+				errors: settings.getErrors('apiEndpoints'),
+			}) }}
+		</div>
+	{% endnamespace %}
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends 'field-value-parser/_layouts/settings.twig' %}
+{% import '_includes/forms.twig' as forms %}
+{# @var settings \MarcusGaius\FieldValueParser\Models\Settings #}
+
+{% set settingsScreen = 'webhooks' %}
+{% set title = 'Webhooks' | t('field-value-parser') %}
+{% set readOnly = not craft.app.config.general.allowAdminChanges %}
+{% set fullPageForm = not readOnly %}
+{% set variable = craft.fieldValueParser %}
+
+{% block content %}
+	{% if readOnly %}
+		<p class="warning">{{ 'Administrative changes are disallowed in this environment.' | t('app') }}</p>
+	{% else %}
+		{{ actionInput('field-value-parser/settings/save-webhooks') }}
+		{{ redirectInput('field-value-parser/settings/webhooks') }}
+	{% endif %}
+
+	<p class="fvp-muted">
+		{{ 'Webhooks send JSON POSTs from the queue once their elements are saved or deleted, with the elements’ read values, or the read values of the pages their content is part of. POSTs are signed with the secret as the `X-Field-Value-Parser-Signature` header, `sha256=` followed by the HMAC of the body. Try them out with `craft field-value-parser/webhooks/test --webhook={handle}`.' | t('field-value-parser') | md(inlineOnly=true) }}
+	</p>
+
+	{% namespace 'settings' %}
+		{{ forms.lightswitchField({
+			label: settings.getAttributeLabel('webhooksEnabled'),
+			instructions: 'Whether webhooks send POSTs.' | t('field-value-parser'),
+			name: 'webhooksEnabled',
+			on: settings.webhooksEnabled,
+			toggle: 'fvp-webhook-settings',
+			warning: variable.getConfigWarning('webhooksEnabled') | md(inlineOnly=true),
+			disabled: readOnly or settings.isOverriddenByConfig('webhooksEnabled'),
+		}) }}
+
+		<div id="fvp-webhook-settings" {% if not settings.webhooksEnabled %}class="hidden"{% endif %}>
+			{% set configWebhooks = variable.getConfigWebhookRows() %}
+			{% if configWebhooks.error %}
+				<p class="error">{{ configWebhooks.error }}</p>
+			{% elseif configWebhooks.rows | length %}
+				<hr>
+				<h2>{{ 'Webhooks in `config/field-value-parser.php`' | t('field-value-parser') | md(inlineOnly=true) }}</h2>
+				<div class="tableview">
+					<table class="data fullwidth">
+						<thead>
+							<tr>
+								<th scope="col">{{ 'Handle' | t('app') }}</th>
+								<th scope="col">{{ 'URL' | t('app') }}</th>
+								<th scope="col">{{ 'Elements' | t('field-value-parser') }}</th>
+								<th scope="col">{{ 'Events' | t('field-value-parser') }}</th>
+								<th scope="col">{{ 'Sends' | t('field-value-parser') }}</th>
+								<th scope="col">{{ 'Profile' | t('field-value-parser') }}</th>
+								<th scope="col">{{ 'Enabled' | t('app') }}</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for webhook in configWebhooks.rows %}
+								<tr>
+									<td>{% include '_includes/forms/copytextbtn.twig' with {value: webhook.handle} only %}</td>
+									<td><code>{{ webhook.url }}</code></td>
+									<td>{{ webhook.elements }}</td>
+									<td>{{ webhook.events }}</td>
+									<td>{{ webhook.target }}</td>
+									<td><code>{{ webhook.profile }}</code></td>
+									<td>
+										<span class="fvp-badge">
+											<span class="fvp-icon" aria-hidden="true">{{ iconSvg(webhook.enabled ? 'circle-check' : 'circle-xmark') }}</span>
+											{{ webhook.enabled ? 'Yes' | t('app') : 'No' | t('app') }}
+										</span>
+									</td>
+								</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			{% endif %}
+
+			<hr>
+			{{ forms.editableTableField({
+				label: settings.getAttributeLabel('cpWebhooks'),
+				instructions: 'Webhooks in `config/field-value-parser.php` with the same handle replace these. URLs and secrets can be environment variables, like `$CRM_WEBHOOK_SECRET`. “Only changes” sends saves only when the elements’ read values changed, with the changes.' | t('field-value-parser') | md(inlineOnly=true),
+				id: 'cpWebhooks',
+				name: 'cpWebhooks',
+				cols: {
+					handle: {type: 'singleline', heading: 'Handle' | t('app'), class: 'code'},
+					url: {type: 'singleline', heading: 'URL' | t('app'), class: 'code'},
+					source: {type: 'select', heading: 'Elements' | t('field-value-parser'), options: variable.getApiSourceOptions()},
+					events: {type: 'select', heading: 'Events' | t('field-value-parser'), options: [
+						{label: 'Save' | t('app'), value: 'save'},
+						{label: 'Delete' | t('app'), value: 'delete'},
+						{label: 'Save and delete' | t('field-value-parser'), value: 'both'},
+					]},
+					target: {type: 'select', heading: 'Sends' | t('field-value-parser'), options: [
+						{label: 'The element' | t('field-value-parser'), value: 'element'},
+						{label: 'Its pages' | t('field-value-parser'), value: 'pages'},
+					]},
+					profile: {type: 'select', heading: 'Profile' | t('field-value-parser'), options: variable.getProfileOptions()},
+					onlyWhenChanged: {type: 'lightswitch', heading: 'Only changes' | t('field-value-parser')},
+					secret: {type: 'singleline', heading: 'Secret' | t('field-value-parser'), class: 'code'},
+					enabled: {type: 'lightswitch', heading: 'Enabled' | t('app')},
+				},
+				rows: variable.getWebhookTableRows(),
+				defaultValues: {
+					events: 'save',
+					target: 'element',
+					onlyWhenChanged: false,
+					enabled: true,
+				},
+				allowAdd: true,
+				allowDelete: true,
+				allowReorder: true,
+				static: readOnly or settings.isOverriddenByConfig('cpWebhooks'),
+				warning: variable.getConfigWarning('cpWebhooks') | md(inlineOnly=true),
+				errors: settings.getErrors('cpWebhooks'),
+			}) }}
+		</div>
+	{% endnamespace %}
+{% endblock %}

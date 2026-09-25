@@ -1,0 +1,328 @@
+{% extends 'field-value-parser/_layouts/settings.twig' %}
+{# @var settings \MarcusGaius\FieldValueParser\Models\UserSettings #}
+
+{% set settingsScreen = 'attributes' %}
+{% set title = 'Attributes' | t('field-value-parser') %}
+{% set fullPageForm = true %}
+{% set variable = craft.fieldValueParser %}
+
+{% macro filter(id, placeholder) %}
+	<div class="texticon fvp-attributes__filter">
+		<span class="texticon-icon search icon" aria-hidden="true"></span>
+		<input type="search" id="{{ id }}" class="text fullwidth" autocomplete="off" placeholder="{{ placeholder }}" aria-label="{{ placeholder }}" data-fvp-filter>
+	</div>
+{% endmacro %}
+
+{% block content %}
+	{{ actionInput('field-value-parser/settings/save') }}
+	{{ redirectInput('field-value-parser/settings/attributes') }}
+	{{ hiddenInput('scenario', 'attributes') }}
+
+	<div class="fvp-attributes-toolbar">
+		<p class="fvp-muted">
+			{{ 'Native attributes parsed with each element type, in addition to the ones placed in its field layouts.' | t('field-value-parser') }}
+			<span class="fvp-badge"><span class="fvp-icon" aria-hidden="true">{{ iconSvg('magnifying-glass') }}</span>{{ 'Searchable by default' | t('field-value-parser') }}</span>
+		</p>
+		<div class="fvp-attributes-toolbar__actions">
+			{{ _self.filter('fvp-attributes-filter', 'Filter attributes' | t('field-value-parser')) }}
+			<div class="btngroup">
+				<button type="button" class="btn small" data-fvp-collapse-all="false">{{ 'Expand all' | t('field-value-parser') }}</button>
+				<button type="button" class="btn small" data-fvp-collapse-all="true">{{ 'Collapse all' | t('field-value-parser') }}</button>
+			</div>
+		</div>
+	</div>
+
+	{% for elementType, elementTypeName in variable.getElementTypes() %}
+		{% set options = variable.getAttributeOptions(elementType) %}
+		{% set selected = variable.getSelectedAttributes(elementType) %}
+		{% set name = 'UserSettings[attributes][' ~ elementType ~ ']' %}
+		{% set bodyId = 'fvp-attributes-' ~ (elementType | id) %}
+
+		<section class="fvp-card fvp-attributes" data-fvp-attributes data-element-type="{{ elementType }}">
+			<header class="fvp-card__header fvp-attributes__header">
+				<button type="button" class="fvp-attributes__toggle" aria-expanded="true" aria-controls="{{ bodyId }}" data-fvp-toggle>
+					<span class="fvp-icon fvp-attributes__chevron" aria-hidden="true">{{ iconSvg('chevron-down') }}</span>
+					<span class="fvp-card__icon" aria-hidden="true">{{ iconSvg(variable.getElementTypeIcon(elementType)) }}</span>
+					<span class="fvp-card__title">{{ elementTypeName }}</span>
+				</button>
+				<span class="fvp-muted fvp-attributes__count" data-fvp-count data-template="{{ '{selected} of {total} selected' | t('field-value-parser', {selected: '{selected}', total: options | length}) }}">
+					{{- '{selected} of {total} selected' | t('field-value-parser', {selected: options | filter(option => option.value in selected) | length, total: options | length}) -}}
+				</span>
+				<div class="btngroup fvp-attributes__actions">
+					<button type="button" class="btn small" data-fvp-select="searchable">{{ 'Searchable' | t('field-value-parser') }}</button>
+					<button type="button" class="btn small" data-fvp-select="all">{{ 'All' | t('app') }}</button>
+					<button type="button" class="btn small" data-fvp-select="none">{{ 'None' | t('app') }}</button>
+				</div>
+			</header>
+
+			<div id="{{ bodyId }}" class="fvp-attributes__body">
+
+				{{ hiddenInput(name, '') }}
+				<div class="fvp-attributes__chips">
+					{% for option in options %}
+						<label class="fvp-chip" data-fvp-chip data-searchable="{{ option.searchable ? '1' : '0' }}" data-keywords="{{ (option.label ~ ' ' ~ option.value) | lower }}">
+							<input type="checkbox" class="fvp-chip__input" name="{{ name }}[]" value="{{ option.value }}" {{- option.value in selected ? ' checked' }}>
+							<span class="fvp-chip__check" aria-hidden="true">{{ iconSvg('check') }}</span>
+							<span class="fvp-chip__label">{{ option.label }}</span>
+							<code class="fvp-chip__handle">{{ option.value }}</code>
+							{% if option.searchable %}
+								<span class="fvp-icon fvp-chip__searchable" title="{{ 'Searchable by default' | t('field-value-parser') }}">{{ iconSvg('magnifying-glass') }}</span>
+							{% endif %}
+						</label>
+					{% endfor %}
+				</div>
+			</div>
+		</section>
+	{% endfor %}
+{% endblock %}
+
+{% css %}
+	.fvp-attributes-toolbar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 10px 20px;
+		margin-bottom: 18px;
+	}
+
+	.fvp-attributes-toolbar p {
+		margin: 0;
+	}
+
+	.fvp-attributes-toolbar__actions {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 10px;
+	}
+
+	.fvp-attributes-toolbar .fvp-attributes__filter {
+		flex: 0 1 260px;
+	}
+
+	.fvp-attributes__toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		padding: 0;
+		border: 0;
+		background: none;
+		cursor: pointer;
+		text-align: start;
+		color: inherit;
+		font: inherit;
+	}
+
+	.fvp-attributes__toggle:focus-visible {
+		border-radius: 8px;
+		box-shadow: var(--focus-ring, 0 0 0 2px #2563eb);
+	}
+
+	.fvp-attributes__chevron {
+		color: var(--light-text-color, #606d7b);
+		transition: transform 0.15s;
+	}
+
+	.fvp-attributes.is-collapsed .fvp-attributes__chevron {
+		transform: rotate(-90deg);
+	}
+
+	.fvp-attributes__count {
+		font-size: 12px;
+		margin-inline-end: auto;
+	}
+
+	.fvp-attributes__body {
+		margin-top: 14px;
+	}
+
+	.fvp-attributes.is-collapsed .fvp-attributes__body {
+		display: none;
+	}
+
+	/* Without a clear button, the filters' end padding matches Craft's block padding for text inputs */
+	.fvp-attributes__filter input.text {
+		padding-inline-end: 7px !important;
+	}
+
+
+	.fvp-attributes__chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+
+
+	.fvp-chip {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 4px 11px 4px 5px;
+		border: 1px solid var(--hairline-color, #e3e5e8);
+		border-radius: 999px;
+		background: var(--gray-050, #f3f7fc);
+		cursor: pointer;
+		user-select: none;
+		line-height: 1.4;
+		transition: background-color 0.15s, border-color 0.15s;
+	}
+
+	.fvp-chip:hover {
+		border-color: var(--gray-300, #cbd5e1);
+	}
+
+	/* Attributes an element type's own filter doesn't match stay in place, so they can still be found and toggled */
+	.fvp-chip.is-dimmed {
+		opacity: 0.35;
+	}
+
+	.fvp-chip.is-dimmed:hover,
+	.fvp-chip.is-dimmed:has(.fvp-chip__input:focus-visible) {
+		opacity: 0.7;
+	}
+
+	.fvp-chip:has(.fvp-chip__input:focus-visible) {
+		box-shadow: var(--focus-ring, 0 0 0 2px #2563eb);
+	}
+
+	.fvp-chip__input {
+		position: absolute;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.fvp-chip__check {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		border: 1px solid var(--gray-300, #cbd5e1);
+		background: var(--white, #fff);
+		transition: background-color 0.15s, border-color 0.15s;
+	}
+
+	.fvp-chip__check svg {
+		width: 10px;
+		height: 10px;
+		fill: #fff;
+		opacity: 0;
+	}
+
+	.fvp-chip:has(.fvp-chip__input:checked) {
+		background: var(--blue-050, #eff6ff);
+		border-color: var(--blue-300, #93c5fd);
+	}
+
+	.fvp-chip:has(.fvp-chip__input:checked) .fvp-chip__check {
+		background: var(--link-color, #2563eb);
+		border-color: var(--link-color, #2563eb);
+	}
+
+	.fvp-chip:has(.fvp-chip__input:checked) .fvp-chip__check svg {
+		opacity: 1;
+	}
+
+	.fvp-chip__handle {
+		font-size: 11px;
+		color: var(--light-text-color, #606d7b);
+		background: none !important;
+		padding: 0 !important;
+	}
+
+	.fvp-chip__searchable {
+		width: 10px;
+		height: 10px;
+		color: var(--light-text-color, #606d7b);
+	}
+{% endcss %}
+
+{% js %}
+	(() => {
+		const storageKey = 'fieldValueParser.collapsedAttributes';
+		const sections = [...document.querySelectorAll('[data-fvp-attributes]')];
+		const filter = document.getElementById('fvp-attributes-filter');
+
+		// Browser storage can be unavailable, in which case element types just start expanded
+		const readCollapsed = () => {
+			try {
+				return new Set(JSON.parse(localStorage.getItem(storageKey) ?? '[]'));
+			} catch (e) {
+				return new Set();
+			}
+		};
+		const writeCollapsed = (collapsed) => {
+			try {
+				localStorage.setItem(storageKey, JSON.stringify([...collapsed]));
+			} catch (e) {}
+		};
+
+		const collapsed = readCollapsed();
+		const setCollapsed = (section, isCollapsed) => {
+			section.classList.toggle('is-collapsed', isCollapsed);
+			section.querySelector('[data-fvp-toggle]').setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+			isCollapsed ? collapsed.add(section.dataset.elementType) : collapsed.delete(section.dataset.elementType);
+		};
+
+		// The filter hides the element types without matching attributes, and dims the attributes that don't match in the ones left
+		const applyFilter = (section) => {
+			const term = filter.value.trim().toLowerCase();
+			let matchingChips = 0;
+
+			section.querySelectorAll('[data-fvp-chip]').forEach((chip) => {
+				const matches = chip.dataset.keywords.includes(term);
+				chip.classList.toggle('is-dimmed', !matches);
+				if (matches) matchingChips++;
+			});
+
+			section.hidden = matchingChips === 0;
+		};
+
+		sections.forEach((section) => {
+			const inputs = [...section.querySelectorAll('.fvp-chip__input')];
+			const count = section.querySelector('[data-fvp-count]');
+			const updateCount = () => {
+				count.textContent = count.dataset.template.replace('{selected}', inputs.filter((input) => input.checked).length);
+			};
+
+			setCollapsed(section, collapsed.has(section.dataset.elementType));
+
+			section.querySelector('[data-fvp-toggle]').addEventListener('click', () => {
+				setCollapsed(section, !section.classList.contains('is-collapsed'));
+				writeCollapsed(collapsed);
+			});
+
+			inputs.forEach((input) => input.addEventListener('change', updateCount));
+			section.querySelectorAll('[data-fvp-select]').forEach((button) => {
+				button.addEventListener('click', () => {
+					const selection = button.dataset.fvpSelect;
+					inputs.forEach((input) => {
+						// Only the attributes the filters match are selected or deselected
+						const chip = input.closest('[data-fvp-chip]');
+						if (chip.classList.contains('is-dimmed')) return;
+						input.checked = selection === 'all'
+							|| (selection === 'searchable' && chip.dataset.searchable === '1');
+					});
+					updateCount();
+				});
+			});
+		});
+
+		document.querySelectorAll('[data-fvp-collapse-all]').forEach((button) => {
+			button.addEventListener('click', () => {
+				sections.forEach((section) => setCollapsed(section, button.dataset.fvpCollapseAll === 'true'));
+				writeCollapsed(collapsed);
+			});
+		});
+
+		filter.addEventListener('input', () => sections.forEach(applyFilter));
+
+		// The filter isn't part of the settings, so pressing enter in it doesn't submit the form
+		filter.addEventListener('keydown', (event) => {
+			if (event.key === 'Enter') event.preventDefault();
+		});
+	})();
+{% endjs %}

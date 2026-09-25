@@ -1,0 +1,113 @@
+{% extends '_layouts/cp.twig' %}
+{% set pluginName = craft.fieldValueParser.getPluginName() %}
+{% set selectedSubnavItem = settingsScreen %}
+
+{% if title is not defined %}
+	{% set title = pluginName %}
+{% endif %}
+
+{% set crumbs = [
+	{
+		label: pluginName,
+		url: url('field-value-parser/settings'),
+		icon: '@field-value-parser/icon-mask.svg',
+	},
+] %}
+
+{% block sidebar %}
+	<nav class="fvp-nav" aria-label="{{ pluginName }}">
+		<ul>
+			{% for handle, item in craft.fieldValueParser.getSettingsNavItems() %}
+				<li>
+					<a {% if handle == settingsScreen %}class="sel" aria-current="page"{% endif %} href="{{ url(item.url) }}">
+						<span class="fvp-icon" aria-hidden="true">{{ iconSvg(item.icon) }}</span>
+						<span class="label">{{ item.label }}</span>
+					</a>
+				</li>
+			{% endfor %}
+		</ul>
+	</nav>
+{% endblock %}
+
+{% css %}
+	.fvp-icon {
+		display: inline-flex;
+		flex-shrink: 0;
+		width: 1em;
+		height: 1em;
+		vertical-align: -0.125em;
+	}
+
+	.fvp-icon svg {
+		width: 100%;
+		height: 100%;
+		fill: currentColor;
+	}
+
+	.fvp-nav a {
+		display: flex !important;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.fvp-nav .fvp-icon {
+		color: var(--light-text-color, #606d7b);
+	}
+
+	.fvp-nav a.sel .fvp-icon {
+		color: currentColor;
+	}
+
+	.fvp-card {
+		border: 1px solid var(--hairline-color, #e3e5e8);
+		border-radius: var(--large-border-radius, 8px);
+		background: var(--white, #fff);
+		padding: 16px 20px;
+		margin-bottom: 14px;
+	}
+
+	.fvp-card__header {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 8px 10px;
+	}
+
+	.fvp-card__icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		border-radius: 8px;
+		background: var(--gray-050, #f3f7fc);
+		color: var(--link-color, #2563eb);
+	}
+
+	.fvp-card__icon svg {
+		width: 16px;
+		height: 16px;
+		fill: currentColor;
+	}
+
+	.fvp-card__title {
+		margin: 0 !important;
+		font-size: 15px;
+	}
+
+	.fvp-muted {
+		color: var(--light-text-color, #606d7b);
+	}
+
+	.fvp-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		padding: 2px 8px;
+		border-radius: 999px;
+		background: var(--gray-050, #f3f7fc);
+		border: 1px solid var(--hairline-color, #e3e5e8);
+		font-size: 12px;
+		white-space: nowrap;
+	}
+{% endcss %}

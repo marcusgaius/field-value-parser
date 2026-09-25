@@ -1,0 +1,101 @@
+{% extends 'field-value-parser/_layouts/settings.twig' %}
+{% import '_includes/forms.twig' as forms %}
+{# @var settings \MarcusGaius\FieldValueParser\Models\Settings #}
+
+{% set settingsScreen = 'system' %}
+{% set title = 'System' | t('field-value-parser') %}
+{% set readOnly = not craft.app.config.general.allowAdminChanges %}
+{% set fullPageForm = not readOnly %}
+{% set variable = craft.fieldValueParser %}
+
+{% macro heading(icon, text) %}
+	<h2 class="fvp-heading">
+		<span class="fvp-card__icon" aria-hidden="true">{{ iconSvg(icon) }}</span>
+		{{ text }}
+	</h2>
+{% endmacro %}
+
+{% block content %}
+	{% if readOnly %}
+		<p class="warning">{{ 'Administrative changes are disallowed in this environment.' | t('app') }}</p>
+	{% else %}
+		{{ actionInput('field-value-parser/settings/save-system') }}
+		{{ redirectInput('field-value-parser/settings/system') }}
+	{% endif %}
+
+	{% namespace 'settings' %}
+		{{ _self.heading('clock-rotate-left', 'Changes' | t('field-value-parser')) }}
+
+		{{ forms.checkboxSelectField({
+			label: settings.getAttributeLabel('trackedElementTypes'),
+			instructions: 'The element types whose read values are compared before and after they’re saved. Nested elements’ changes are part of their owners’. Profiles for what’s compared can be set with the `changeProfiles` setting in `config/field-value-parser.php`.' | t('field-value-parser') | md(inlineOnly=true),
+			name: 'trackedElementTypes',
+			options: variable.getElementTypes(),
+			values: settings.trackedElementTypes,
+			warning: variable.getConfigWarning('trackedElementTypes') | md(inlineOnly=true),
+			disabled: readOnly or settings.isOverriddenByConfig('trackedElementTypes'),
+			errors: settings.getErrors('trackedElementTypes'),
+		}) }}
+
+		{{ forms.lightswitchField({
+			label: settings.getAttributeLabel('changeLog'),
+			instructions: 'Whether tracked changes are stored, to list them with `craft.fieldValueParser.changes(element)` or `craft field-value-parser/changes --element-id=…`.' | t('field-value-parser') | md(inlineOnly=true),
+			name: 'changeLog',
+			on: settings.changeLog,
+			warning: variable.getConfigWarning('changeLog') | md(inlineOnly=true),
+			disabled: readOnly or settings.isOverriddenByConfig('changeLog'),
+		}) }}
+
+		<hr>
+		{{ _self.heading('diagram-project', 'Parsing' | t('field-value-parser')) }}
+
+		{{ forms.textField({
+			label: settings.getAttributeLabel('maxRelationDepth'),
+			instructions: 'How many relations deep related elements’ content is followed into search documents and API values. Leave it empty to leave related content out, or set it to `0` to follow relations as deep as they go, without going in circles. Nested elements, like Matrix, Neo and Content Block fields’, are always followed.' | t('field-value-parser') | md(inlineOnly=true),
+			tip: 'At most {limit} relations deep, which can be changed with the `unlimitedRelationDepth` setting in `config/field-value-parser.php`.' | t('field-value-parser', {limit: settings.unlimitedRelationDepth}) | md(inlineOnly=true),
+			name: 'maxRelationDepth',
+			type: 'number',
+			min: 0,
+			max: settings.unlimitedRelationDepth,
+			size: 5,
+			value: settings.maxRelationDepth,
+			warning: variable.getConfigWarning('maxRelationDepth') | md(inlineOnly=true),
+			disabled: readOnly or settings.isOverriddenByConfig('maxRelationDepth'),
+			errors: settings.getErrors('maxRelationDepth'),
+		}) }}
+
+		{{ forms.textField({
+			label: settings.getAttributeLabel('schemaCacheDuration'),
+			instructions: 'How long layout schemas stay cached, in seconds. `0` keeps them until a field or field layout changes, empty only for the request.' | t('field-value-parser') | md(inlineOnly=true),
+			name: 'schemaCacheDuration',
+			type: 'number',
+			min: 0,
+			size: 10,
+			value: settings.schemaCacheDuration,
+			warning: variable.getConfigWarning('schemaCacheDuration') | md(inlineOnly=true),
+			disabled: readOnly or settings.isOverriddenByConfig('schemaCacheDuration'),
+			errors: settings.getErrors('schemaCacheDuration'),
+		}) }}
+
+		{{ forms.textField({
+			label: settings.getAttributeLabel('readCacheDuration'),
+			instructions: 'How long values read with profiles stay cached, in seconds. `0` keeps them until an element they include changes, empty doesn’t cache them.' | t('field-value-parser') | md(inlineOnly=true),
+			name: 'readCacheDuration',
+			type: 'number',
+			min: 0,
+			size: 10,
+			value: settings.readCacheDuration,
+			warning: variable.getConfigWarning('readCacheDuration') | md(inlineOnly=true),
+			disabled: readOnly or settings.isOverriddenByConfig('readCacheDuration'),
+			errors: settings.getErrors('readCacheDuration'),
+		}) }}
+	{% endnamespace %}
+{% endblock %}
+
+{% css %}
+	.fvp-heading {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+{% endcss %}

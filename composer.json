@@ -1,0 +1,39 @@
+{
+	"name": "marcusgaius/field-value-parser",
+	"description": "Parses field layouts and element values into context-aware structures for copying, search indexing and APIs.",
+	"type": "craft-plugin",
+	"license": "MIT",
+	"autoload": {
+		"psr-4": {
+			"MarcusGaius\\FieldValueParser\\": "src/"
+		}
+	},
+	"authors": [
+		{
+			"name": "Marko Gajić",
+			"email": "metalmorgoth@gmail.com"
+		}
+	],
+	"minimum-stability": "dev",
+	"prefer-stable": true,
+	"require": {
+		"php": "^8.2",
+		"craftcms/cms": "^5.9"
+	},
+	"extra": {
+		"handle": "field-value-parser",
+		"name": "Field Value Parser",
+		"developer": "Marko Gajić",
+		"class": "MarcusGaius\\FieldValueParser\\Plugin"
+	},
+	"config": {
+		"allow-plugins": {
+			"yiisoft/yii2-composer": true,
+			"craftcms/plugin-installer": true
+		}
+	},
+	"support": {
+		"issues": "https://github.com/marcusgaius/field-value-parser/issues",
+		"source": "https://github.com/marcusgaius/field-value-parser"
+	}
+}
