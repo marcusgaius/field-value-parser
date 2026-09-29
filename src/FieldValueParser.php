@@ -87,6 +87,8 @@ class FieldValueParser extends Module
 	{
 		parent::init();
 		Craft::setAlias('@field-value-parser', __DIR__);
+		// Yii resolves modules' controller paths from their namespaces, e.g. when `craft help` lists every module's commands
+		Craft::setAlias('@MarcusGaius/FieldValueParser', __DIR__);
 
 		// Craft only registers a plugin's translations while it's loaded, and the parsing is used without the plugin hosting the rest
 		Craft::$app->getI18n()->translations[self::HANDLE] ??= [
