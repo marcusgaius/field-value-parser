@@ -24,7 +24,9 @@
 		"handle": "field-value-parser",
 		"name": "Field Value Parser",
 		"developer": "Marko Gajić",
-		"class": "MarcusGaius\\FieldValueParser\\Plugin"
+		"class": "MarcusGaius\\FieldValueParser\\Plugin",
+		"documentationUrl": "https://github.com/marcusgaius/field-value-parser",
+		"changelogUrl": "https://raw.githubusercontent.com/marcusgaius/field-value-parser/main/CHANGELOG.md"
 	},
 	"config": {
 		"allow-plugins": {
