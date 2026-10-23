@@ -86,10 +86,11 @@ Built in: relation fields, Matrix, Addresses and Content Block fields, Neo, CKEd
 
 ### Sites
 
-Whether an element stores the same value for a field or attribute in another site, following translation methods, nested element propagation, and entry types' title and slug translation:
+Whether an element stores the same value for a field or attribute in another site, following translation methods, nested element propagation, and entry types' title and slug translation. Pass the element the value would be written into, instead of a site, where it may be a separate element, which shares none of its values:
 
 ```php
 $parser->getSites()->isValueShared($entry, $node, $otherSiteId);
+$parser->getSites()->isValueShared($entry, $node, $otherElement);
 ```
 
 ### Texts
